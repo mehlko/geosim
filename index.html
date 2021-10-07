@@ -35,6 +35,20 @@
       init();
       animate();
 
+      const mapUrl = 'https://mehlko.github.io/geosim/maps/bisholder.json';
+
+      test();
+      function test() {
+        fetch(mapUrl)
+          .then((response) => response.json())
+          .then((data) => {
+            console.log('Success:', data);
+          })
+          .catch((error) => {
+            console.error('Error:', error);
+          });
+      }
+
       function init() {
         container = document.createElement('div');
         document.body.appendChild(container);
@@ -68,17 +82,16 @@
         const points = [];
         points.push(new THREE.Vector3(0, 0, 0));
         points.push(new THREE.Vector3(0, 0, 30));
-        
+
         let matLine = new LineMaterial({
           color: 0xff0000,
           linewidth: 0.01, // in world units with size attenuation, pixels otherwise
         });
 
         const geometry = new LineGeometry();
-        geometry.fromLine(new THREE.Line(
-          new THREE.BufferGeometry().setFromPoints(points)
-        ));
-
+        geometry.fromLine(
+          new THREE.Line(new THREE.BufferGeometry().setFromPoints(points))
+        );
 
         let line = new Line2(geometry, matLine);
         group.add(line);
@@ -112,21 +125,20 @@
         pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
       }
 
-      function getLine(x,y){
+      function getLine(x, y) {
         const points = [];
         points.push(new THREE.Vector3(0, 0, 0));
         points.push(new THREE.Vector3(0, 0, 30));
-        
+
         let matLine = new LineMaterial({
           color: 0xff0000,
           linewidth: 0.01, // in world units with size attenuation, pixels otherwise
         });
 
         const geometry = new LineGeometry();
-        geometry.fromLine(new THREE.Line(
-          new THREE.BufferGeometry().setFromPoints(points)
-        ));
-
+        geometry.fromLine(
+          new THREE.Line(new THREE.BufferGeometry().setFromPoints(points))
+        );
 
         let line = new Line2(geometry, matLine);
         group.add(line);
