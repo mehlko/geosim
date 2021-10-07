@@ -1,3 +1,6 @@
-# web-platform-7qcam8
+# GeoSim
 
-[Edit on StackBlitz ⚡️](https://stackblitz.com/edit/web-platform-7qcam8)
+Load a part of the world and simulate it.
+
+
+
