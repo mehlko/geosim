@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>three.js webgl - geometry - shapes</title>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
+    <link type="text/css" rel="stylesheet" href="style.css" />
+    <style>
+      body {
+        background-color: #f0f0f0;
+        color: #444;
+      }
+    </style>
+    <script src="script.js"></script>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from 'https://threejs.org/build/three.module.js';
+
+      import Stats from 'https://threejs.org/examples/jsm/libs/stats.module.js';
+      import { Line2 } from 'https://threejs.org/examples/jsm/lines/Line2.js';
+      import { OrbitControls } from 'https://threejs.org/examples/jsm/controls/OrbitControls.js';
+      import { LineMaterial } from 'https://threejs.org/examples/jsm/lines/LineMaterial.js';
+      import { LineGeometry } from 'https://threejs.org/examples/jsm/lines/LineGeometry.js';
+      let container, stats;
+      let camera, scene, raycaster, renderer, group, sphereInter;
+
+      const pointer = new THREE.Vector2();
+      const radius = 100;
+      let theta = 0;
+
+      init();
+      animate();
+
+      function init() {
+        container = document.createElement('div');
+        document.body.appendChild(container);
+
+        camera = new THREE.PerspectiveCamera(
+          70,
+          window.innerWidth / window.innerHeight,
+          1,
+          10000
+        );
+
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf0f0f0);
+
+        const intersectGeometry = new THREE.SphereGeometry(3);
+        const intersectMaterial = new THREE.MeshBasicMaterial({
+          color: 0xff0000,
+        });
+
+        sphereInter = new THREE.Mesh(intersectGeometry, intersectMaterial);
+        sphereInter.visible = false;
+        scene.add(sphereInter);
+
+        const helper = new THREE.GridHelper(200, 20);
+        scene.add(helper);
+        const axesHelper = new THREE.AxesHelper(5);
+        scene.add(axesHelper);
+
+        group = new THREE.Object3D();
+
+        const points = [];
+        points.push(new THREE.Vector3(0, 0, 0));
+        points.push(new THREE.Vector3(0, 0, 30));
+        
+        let matLine = new LineMaterial({
+          color: 0xff0000,
+          linewidth: 0.01, // in world units with size attenuation, pixels otherwise
+        });
+
+        const geometry = new LineGeometry();
+        geometry.fromLine(new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints(points)
+        ));
+
+
+        let line = new Line2(geometry, matLine);
+        group.add(line);
+        //group.add(object);
+
+        scene.add(group);
+
+        raycaster = new THREE.Raycaster();
+        raycaster.params.Line.threshold = 3;
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        stats = new Stats();
+        container.appendChild(stats.dom);
+
+        document.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('resize', onWindowResize);
+      }
+
+      function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      function onPointerMove(event) {
+        pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+        pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      }
+
+      function getLine(x,y){
+        const points = [];
+        points.push(new THREE.Vector3(0, 0, 0));
+        points.push(new THREE.Vector3(0, 0, 30));
+        
+        let matLine = new LineMaterial({
+          color: 0xff0000,
+          linewidth: 0.01, // in world units with size attenuation, pixels otherwise
+        });
+
+        const geometry = new LineGeometry();
+        geometry.fromLine(new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints(points)
+        ));
+
+
+        let line = new Line2(geometry, matLine);
+        group.add(line);
+      }
+
+      //
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        render();
+        stats.update();
+      }
+
+      function render() {
+        theta += 0.1;
+
+        camera.position.x = radius * Math.sin(THREE.MathUtils.degToRad(theta));
+        camera.position.y = radius * Math.sin(THREE.MathUtils.degToRad(theta));
+        camera.position.z = radius * Math.cos(THREE.MathUtils.degToRad(theta));
+        camera.lookAt(scene.position);
+
+        camera.updateMatrixWorld();
+
+        // find intersections
+
+        raycaster.setFromCamera(pointer, camera);
+
+        const intersects = raycaster.intersectObjects(group.children, true);
+
+        if (intersects.length > 0) {
+          sphereInter.visible = true;
+          sphereInter.position.copy(intersects[0].point);
+        } else {
+          sphereInter.visible = false;
+        }
+
+        renderer.render(scene, camera);
+      }
+    </script>
+  </body>
+</html>
