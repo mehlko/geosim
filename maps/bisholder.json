@@ -6,10 +6,10 @@
     "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
   },
   "bounds": {
-    "minlat": "50.3319000",
-    "minlon": "7.5277000",
-    "maxlat": "50.3359000",
-    "maxlon": "7.5355000"
+    "minlat": 50.3319,
+    "minlon": 7.5277,
+    "maxlat": 50.3359,
+    "maxlon": 7.5355
   },
   "elements": [
     {

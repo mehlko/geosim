@@ -37,12 +37,20 @@
 
       const mapUrl = 'https://mehlko.github.io/geosim/maps/bisholder.json';
 
+      const nodeMap = new Map();
+      var bounds = {};
+
       test();
       function test() {
         fetch(mapUrl)
           .then((response) => response.json())
           .then((data) => {
+            bounds = data.bounds;
+            nodeMap.set('a', 1);
+
             console.log('Success:', data);
+            console.log('Success:', bounds);
+            
           })
           .catch((error) => {
             console.error('Error:', error);
