@@ -26,7 +26,7 @@
       import { LineMaterial } from 'https://threejs.org/examples/jsm/lines/LineMaterial.js';
       import { LineGeometry } from 'https://threejs.org/examples/jsm/lines/LineGeometry.js';
       let container, stats;
-      let camera, scene, raycaster, renderer, group, sphereInter;
+      let camera, scene, raycaster, renderer, group, controls;
 
       const pointer = new THREE.Vector2();
       const radius = 1;
@@ -34,43 +34,39 @@
 
       const mapUrl = 'https://mehlko.github.io/geosim/maps/bisholder.json';
 
+      //map
+      var bounds = {};
       const nodeMap = new Map();
       const wayMap = new Map();
-      var bounds = {};
 
       var matLine = new LineMaterial({
         color: 0xff0000,
-        linewidth: 0.01,
+        linewidth: 0.002,
       });
-      loadMap();
+
+      async function loadMap() {
+        var response = await fetch(mapUrl);
+        var json = await response.json();
+        bounds = json.bounds;
+        json.elements.map((element) => {
+          if (element.type == 'node') {
+            nodeMap.set(element.id, element);
+          }
+          if (element.type == 'way') {
+            wayMap.set(element.id, element);
+          }
+        });
+
+        console.log('Loading done:', json);
+        console.log('Bounds:', bounds);
+        console.log('Nodes:', nodeMap.size);
+        console.log('Way:', wayMap.size);
+      }
+
       init();
       animate();
 
-      function loadMap() {
-        fetch(mapUrl)
-          .then((response) => response.json())
-          .then((data) => {
-            bounds = data.bounds;
-            data.elements.map((element) => {
-              if (element.type == 'node') {
-                nodeMap.set(element.id, element);
-              }
-              if (element.type == 'way') {
-                wayMap.set(element.id, element);
-              }
-            });
-
-            console.log('Loading done:', data);
-            console.log('Bounds:', bounds);
-            console.log('Nodes:', nodeMap.size);
-            console.log('Way:', wayMap.size);
-          })
-          .catch((error) => {
-            console.error('Error:', error);
-          });
-      }
-
-      function init() {
+      async function init() {
         container = document.createElement('div');
         document.body.appendChild(container);
         renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -83,26 +79,63 @@
         camera = new THREE.PerspectiveCamera(
           70,
           window.innerWidth / window.innerHeight,
-          0.1,
-          1000
+          0.01,
+          10
         );
+        camera.position.set(1, 1, 1);
+
+        renderer.clippingPlanes = [new THREE.Plane(new THREE.Vector3(0.51, 0, 0), 1),new THREE.Plane(new THREE.Vector3(-0.51, 0, 0), 1),new THREE.Plane(new THREE.Vector3(0, 0, 0.51), 1),new THREE.Plane(new THREE.Vector3(0, 0, -0.51), 1)];
+
+        // controls
+        controls = new OrbitControls(camera, renderer.domElement);
+        controls.listenToKeyEvents(window); // optional
+
+        //controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
+
+        controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+        controls.dampingFactor = 0.05;
+
+        controls.screenSpacePanning = false;
+
+        controls.minDistance = 0.2;
+        controls.maxDistance = 1;
+
+        controls.maxPolarAngle = Math.PI / 2;
 
         scene = new THREE.Scene();
+        scene.position.x = -0.5;
+        scene.position.z = -0.5;
         scene.background = new THREE.Color(0xf0f0f0);
-        scene.add(new THREE.GridHelper(2, 100));
-        scene.add(new THREE.AxesHelper(1));
+        let grid = new THREE.GridHelper(1, 10);
+        grid.position.x = +0.5;
+        grid.position.z = +0.5;
+        scene.add(grid);
 
-
-        console.log(wayMap.size);
-        wayMap.forEach((way) => {
-          console.log(way);
-        });
+        let axes = new THREE.AxesHelper(0.1);
+        axes.position.x = +0.5;
+        axes.position.z = +0.5;
+        scene.add(axes);
 
         group = new THREE.Object3D();
+
         scene.add(group);
 
-        let line = getLine(0, 0, 0, 1);
-        group.add(line);
+        await loadMap();
+        console.log('myBounds', bounds.minlat);
+        var scaleX = bounds.maxlat - bounds.minlat;
+        var scaleY = bounds.maxlon - bounds.minlon;
+        group.position.x = -bounds.minlat / scaleX;
+        group.position.z = -bounds.minlon / scaleY;
+
+        console.log(1 / scaleX);
+        group.scale.x = 1 / scaleX;
+        group.scale.z = 1 / scaleY;
+
+        console.log('MyWays', wayMap.size);
+        wayMap.forEach((way) => {
+          let line = getPath(way);
+          group.add(line);
+        });
 
         //event listeners
 
@@ -115,10 +148,13 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
       }
 
-      function getLine(x1, y1, x2, y2) {
+      function getPath(path) {
         const points = [];
-        points.push(new THREE.Vector3(x1, 0, y1));
-        points.push(new THREE.Vector3(x2, 0, y2));
+        path.nodes.map((nodeId) => {
+          var node = nodeMap.get(nodeId);
+
+          points.push(new THREE.Vector3(node.lat, 0, node.lon));
+        });
 
         const geometry = new LineGeometry();
         geometry.fromLine(
@@ -129,21 +165,12 @@
 
       function animate() {
         requestAnimationFrame(animate);
-
+        controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
         render();
         stats.update();
       }
 
       function render() {
-        theta += 0.1;
-
-        camera.position.x = radius * Math.sin(THREE.MathUtils.degToRad(theta));
-        camera.position.y = radius * Math.sin(THREE.MathUtils.degToRad(theta));
-        camera.position.z = radius * Math.cos(THREE.MathUtils.degToRad(theta));
-        camera.lookAt(scene.position);
-
-        camera.updateMatrixWorld();
-
         renderer.render(scene, camera);
       }
     </script>
