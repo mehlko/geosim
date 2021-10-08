@@ -21,3 +21,11 @@ way({{bbox}});
 );
 (.\_;>;);
 out body;
+
+# Remember
+
+https://threejs.org/examples/?q=extrude#webgl_geometry_extrude_shapes
+
+https://github.com/mrdoob/three.js/tree/dev/examples
+
+https://threejs.org/docs/#api/en/geometries/ExtrudeGeometry
