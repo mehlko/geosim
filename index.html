@@ -46,17 +46,17 @@
         linewidth: 0.01,
       });
 
-      test();
-      function test() {
+      loadMap();
+      function loadMap() {
         fetch(mapUrl)
           .then((response) => response.json())
           .then((data) => {
             bounds = data.bounds;
             data.elements.map((element) => {
-              if (element == 'node') {
+              if (element.type == 'node') {
                 nodeMap.set(element.id, element);
               }
-              if (element == 'way') {
+              if (element.type == 'way') {
                 wayMap.set(element.id, element);
               }
             });
@@ -79,7 +79,7 @@
           70,
           window.innerWidth / window.innerHeight,
           0.1,
-          10000
+          100
         );
 
         scene = new THREE.Scene();
@@ -138,7 +138,7 @@
         pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
       }
 
-      function getLine(x, y) {
+      function getLine(x1,  y) {
         const points = [];
         points.push(new THREE.Vector3(0, 0, 0));
         points.push(new THREE.Vector3(0, 0, 30));
