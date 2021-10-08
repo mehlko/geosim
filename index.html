@@ -42,11 +42,10 @@
         color: 0xff0000,
         linewidth: 0.01,
       });
-
+      loadMap();
       init();
       animate();
 
-      loadMap();
       function loadMap() {
         fetch(mapUrl)
           .then((response) => response.json())
@@ -92,6 +91,12 @@
         scene.background = new THREE.Color(0xf0f0f0);
         scene.add(new THREE.GridHelper(2, 100));
         scene.add(new THREE.AxesHelper(1));
+
+
+        console.log(wayMap.size);
+        wayMap.forEach((way) => {
+          console.log(way);
+        });
 
         group = new THREE.Object3D();
         scene.add(group);
