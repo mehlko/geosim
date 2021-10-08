@@ -29,7 +29,7 @@
       let camera, scene, raycaster, renderer, group, sphereInter;
 
       const pointer = new THREE.Vector2();
-      const radius = 100;
+      const radius = 1;
       let theta = 0;
 
       init();
@@ -38,7 +38,13 @@
       const mapUrl = 'https://mehlko.github.io/geosim/maps/bisholder.json';
 
       const nodeMap = new Map();
+      const wayMap = new Map();
       var bounds = {};
+
+      let matLine = new LineMaterial({
+        color: 0xff0000,
+        linewidth: 0.01,
+      });
 
       test();
       function test() {
@@ -46,11 +52,19 @@
           .then((response) => response.json())
           .then((data) => {
             bounds = data.bounds;
-            nodeMap.set('a', 1);
+            data.elements.map((element) => {
+              if (element == 'node') {
+                nodeMap.set(element.id, element);
+              }
+              if (element == 'way') {
+                wayMap.set(element.id, element);
+              }
+            });
 
-            console.log('Success:', data);
-            console.log('Success:', bounds);
-            
+            console.log('Loading done:', data);
+            console.log('Bounds:', bounds);
+            console.log('Nodes:', nodeMap.size);
+            console.log('Way:', wayMap.size);
           })
           .catch((error) => {
             console.error('Error:', error);
@@ -64,23 +78,14 @@
         camera = new THREE.PerspectiveCamera(
           70,
           window.innerWidth / window.innerHeight,
-          1,
+          0.1,
           10000
         );
 
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0xf0f0f0);
 
-        const intersectGeometry = new THREE.SphereGeometry(3);
-        const intersectMaterial = new THREE.MeshBasicMaterial({
-          color: 0xff0000,
-        });
-
-        sphereInter = new THREE.Mesh(intersectGeometry, intersectMaterial);
-        sphereInter.visible = false;
-        scene.add(sphereInter);
-
-        const helper = new THREE.GridHelper(200, 20);
+        const helper = new THREE.GridHelper(2, 100);
         scene.add(helper);
         const axesHelper = new THREE.AxesHelper(5);
         scene.add(axesHelper);
@@ -89,7 +94,7 @@
 
         const points = [];
         points.push(new THREE.Vector3(0, 0, 0));
-        points.push(new THREE.Vector3(0, 0, 30));
+        points.push(new THREE.Vector3(0, 0, 1));
 
         let matLine = new LineMaterial({
           color: 0xff0000,
@@ -138,11 +143,6 @@
         points.push(new THREE.Vector3(0, 0, 0));
         points.push(new THREE.Vector3(0, 0, 30));
 
-        let matLine = new LineMaterial({
-          color: 0xff0000,
-          linewidth: 0.01, // in world units with size attenuation, pixels otherwise
-        });
-
         const geometry = new LineGeometry();
         geometry.fromLine(
           new THREE.Line(new THREE.BufferGeometry().setFromPoints(points))
@@ -151,8 +151,6 @@
         let line = new Line2(geometry, matLine);
         group.add(line);
       }
-
-      //
 
       function animate() {
         requestAnimationFrame(animate);
@@ -171,18 +169,7 @@
 
         camera.updateMatrixWorld();
 
-        // find intersections
-
         raycaster.setFromCamera(pointer, camera);
-
-        const intersects = raycaster.intersectObjects(group.children, true);
-
-        if (intersects.length > 0) {
-          sphereInter.visible = true;
-          sphereInter.position.copy(intersects[0].point);
-        } else {
-          sphereInter.visible = false;
-        }
 
         renderer.render(scene, camera);
       }
