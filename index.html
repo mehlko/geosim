@@ -136,7 +136,7 @@
         wayMap.forEach((way) => {
           let line = getPath(way);
           group.add(line);
-          let line2 = getPath(way);
+          let line2 = getPath2(way);
           group.add(line2);
         });
 
@@ -157,7 +157,9 @@
         geometry.fromLine(
           new THREE.Line(new THREE.BufferGeometry().setFromPoints(points))
         );
-        return new Line2(geometry, matLine);
+        var line = new Line2(geometry, matLine);
+        console.log(line);
+        return line;
       }
 
       function getPath2(path) {
@@ -168,14 +170,12 @@
         });
 
         const extrudeSettings = {
+          depth: 20,
           steps: 1,
-          depth: 1,
           bevelEnabled: true,
-          bevelThickness: 1,
-          bevelSize: 1,
-          bevelOffset: 0,
+          bevelThickness: 2,
+          bevelSize: 4,
           bevelSegments: 1,
-          extrudePath: closedSpline,
         };
         var shape = new THREE.Shape(points);
         var geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
