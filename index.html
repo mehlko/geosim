@@ -138,10 +138,10 @@
         pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
       }
 
-      function getLine(x1,  y) {
+      function getLine(x1, y1, x2, y2) {
         const points = [];
-        points.push(new THREE.Vector3(0, 0, 0));
-        points.push(new THREE.Vector3(0, 0, 30));
+        points.push(new THREE.Vector3(x1, 0, y1));
+        points.push(new THREE.Vector3(x2, 0, y2));
 
         const geometry = new LineGeometry();
         geometry.fromLine(
