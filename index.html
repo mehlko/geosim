@@ -32,19 +32,19 @@
       const radius = 1;
       let theta = 0;
 
-      init();
-      animate();
-
       const mapUrl = 'https://mehlko.github.io/geosim/maps/bisholder.json';
 
       const nodeMap = new Map();
       const wayMap = new Map();
       var bounds = {};
 
-      let matLine = new LineMaterial({
+      var matLine = new LineMaterial({
         color: 0xff0000,
         linewidth: 0.01,
       });
+
+      init();
+      animate();
 
       loadMap();
       function loadMap() {
@@ -74,56 +74,33 @@
       function init() {
         container = document.createElement('div');
         document.body.appendChild(container);
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+        stats = new Stats();
+        container.appendChild(stats.dom);
 
         camera = new THREE.PerspectiveCamera(
           70,
           window.innerWidth / window.innerHeight,
           0.1,
-          100
+          1000
         );
 
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0xf0f0f0);
-
-        const helper = new THREE.GridHelper(2, 100);
-        scene.add(helper);
-        const axesHelper = new THREE.AxesHelper(5);
-        scene.add(axesHelper);
+        scene.add(new THREE.GridHelper(2, 100));
+        scene.add(new THREE.AxesHelper(5));
 
         group = new THREE.Object3D();
-
-        const points = [];
-        points.push(new THREE.Vector3(0, 0, 0));
-        points.push(new THREE.Vector3(0, 0, 1));
-
-        let matLine = new LineMaterial({
-          color: 0xff0000,
-          linewidth: 0.01, // in world units with size attenuation, pixels otherwise
-        });
-
-        const geometry = new LineGeometry();
-        geometry.fromLine(
-          new THREE.Line(new THREE.BufferGeometry().setFromPoints(points))
-        );
-
-        let line = new Line2(geometry, matLine);
-        group.add(line);
-        //group.add(object);
-
         scene.add(group);
 
-        raycaster = new THREE.Raycaster();
-        raycaster.params.Line.threshold = 3;
+        let line = getLine(0, 0, 0, 1);
+        group.add(line);
 
-        renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        container.appendChild(renderer.domElement);
+        //event listeners
 
-        stats = new Stats();
-        container.appendChild(stats.dom);
-
-        document.addEventListener('pointermove', onPointerMove);
         window.addEventListener('resize', onWindowResize);
       }
 
@@ -131,11 +108,6 @@
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-      }
-
-      function onPointerMove(event) {
-        pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-        pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
       }
 
       function getLine(x1, y1, x2, y2) {
@@ -147,9 +119,7 @@
         geometry.fromLine(
           new THREE.Line(new THREE.BufferGeometry().setFromPoints(points))
         );
-
-        let line = new Line2(geometry, matLine);
-        group.add(line);
+        return new Line2(geometry, matLine);
       }
 
       function animate() {
@@ -168,8 +138,6 @@
         camera.lookAt(scene.position);
 
         camera.updateMatrixWorld();
-
-        raycaster.setFromCamera(pointer, camera);
 
         renderer.render(scene, camera);
       }
