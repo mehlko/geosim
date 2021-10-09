@@ -41,7 +41,7 @@
 
       var matLine = new LineMaterial({
         color: 0xff0000,
-        linewidth: 0.002,
+        linewidth: 0.004,
       });
 
       async function loadMap() {
@@ -83,15 +83,17 @@
           1000
         );
         camera.position.set(1, 1, 1);
+        camera.up = new THREE.Vector3(0, 0, 1);
 
         /*
+        Clipping
+        */
         renderer.clippingPlanes = [
           new THREE.Plane(new THREE.Vector3(0.51, 0, 0), 1),
           new THREE.Plane(new THREE.Vector3(-0.51, 0, 0), 1),
-          new THREE.Plane(new THREE.Vector3(0, 0, 0.51), 1),
-          new THREE.Plane(new THREE.Vector3(0, 0, -0.51), 1),
+          new THREE.Plane(new THREE.Vector3(0, 0.51, 0), 1),
+          new THREE.Plane(new THREE.Vector3(0, -0.51, 0), 1),
         ];
-*/
         // controls
         controls = new OrbitControls(camera, renderer.domElement);
         controls.listenToKeyEvents(window); // optional
@@ -110,11 +112,13 @@
 
         scene = new THREE.Scene();
         scene.position.x = -0.5;
-        scene.position.z = -0.5;
+        scene.position.y = -0.5;
         scene.background = new THREE.Color(0xf0f0f0);
         let grid = new THREE.GridHelper(1, 10);
         grid.position.x = +0.5;
-        grid.position.z = +0.5;
+        grid.position.y = +0.5;
+        grid.rotation.x = Math.PI / 2;
+
         scene.add(grid);
 
         let axes = new THREE.AxesHelper(0.1);
@@ -128,18 +132,18 @@
         var scaleX = bounds.maxlat - bounds.minlat;
         var scaleY = bounds.maxlon - bounds.minlon;
         group.position.x = -bounds.minlat / scaleX;
-        group.position.z = -bounds.minlon / scaleY;
+        group.position.y = -bounds.minlon / scaleY;
         group.scale.x = 1 / scaleX;
-        group.scale.z = 1 / scaleY;
+        group.scale.y = 1 / scaleY;
 
         console.log('MyWays', wayMap.size);
 
         wayMap.forEach((way) => {
-          let line = getPath(way);
-          group.add(line);
-          let line2 = getPath2(way);
-          console.log(line2);
-          group.add(line2);
+          if (way.tags && way.tags.building) {
+            group.add(getBuilding(way));
+          } else {
+            group.add(getPath(way));
+          }
         });
 
         //event listeners
@@ -150,9 +154,8 @@
       function getPath(path) {
         const points = [];
         path.nodes.map((nodeId) => {
-          var node = nodeMap.get(nodeId);
-
-          points.push(new THREE.Vector3(node.lat, 0, node.lon));
+          const node = nodeMap.get(nodeId);
+          points.push(new THREE.Vector3(node.lat, node.lon, 0));
         });
 
         const geometry = new LineGeometry();
@@ -164,30 +167,30 @@
         return line;
       }
 
-      function getPath2(path) {
+      function getBuilding(path) {
         const points = [];
+
         path.nodes.map((nodeId) => {
-          var node = nodeMap.get(nodeId);
+          const node = nodeMap.get(nodeId);
           points.push(new THREE.Vector2(node.lat, node.lon));
         });
 
+        const shape = new THREE.Shape(points);
+
         const extrudeSettings = {
-          depth: 1,
-          steps: 1,
+          steps: 0,
+          depth: 0.01,
           bevelEnabled: true,
-          bevelThickness: 1,
-          bevelSize: 1,
+          bevelThickness: 0,
+          bevelSize: 0,
+          bevelOffset: 0,
           bevelSegments: 1,
         };
-        var shape = new THREE.Shape(points);
-        var geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
 
-        var mesh = new THREE.Mesh(
-          geometry,
-          new THREE.MeshPhongMaterial({ color: 0xff0000 })
-        );
+        const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const mesh = new THREE.Mesh(geometry, material);
 
-        console.log(mesh);
         return mesh;
       }
 
