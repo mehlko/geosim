@@ -28,9 +28,7 @@
       let container, stats;
       let camera, scene, raycaster, renderer, group, controls;
 
-      const pointer = new THREE.Vector2();
-      const radius = 1;
-      let theta = 0;
+
 
       const mapUrl = 'https://mehlko.github.io/geosim/maps/bisholder.json';
 
@@ -40,8 +38,8 @@
       const wayMap = new Map();
 
       var matLine = new LineMaterial({
-        color: 0xff0000,
-        linewidth: 0.004,
+        color: 0x666666,
+        linewidth: 0.006,
       });
 
       async function loadMap() {
@@ -82,7 +80,7 @@
           0.01,
           1000
         );
-        camera.position.set(1, 1, 1);
+        camera.position.set(0.5, 0.5, 0.25);
         camera.up = new THREE.Vector3(0, 0, 1);
 
         /*
@@ -101,7 +99,7 @@
         //controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
 
         controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
-        controls.dampingFactor = 0.05;
+        controls.dampingFactor = 0.5;
 
         controls.screenSpacePanning = false;
 
@@ -120,7 +118,7 @@
         grid.rotation.x = Math.PI / 2;
 
         scene.add(grid);
-        scene.fog = new THREE.FogExp2( 0xcccccc, 2 );
+        scene.fog = new THREE.FogExp2( 0xcccccc, 1.5 );
 
         let axes = new THREE.AxesHelper(0.1);
         scene.add(axes);
@@ -142,7 +140,7 @@
         wayMap.forEach((way) => {
           if (way.tags && way.tags.building) {
             group.add(getBuilding(way));
-          } else {
+          }  if (way.tags && way.tags.highway) {
             group.add(getPath(way));
           }
         });
